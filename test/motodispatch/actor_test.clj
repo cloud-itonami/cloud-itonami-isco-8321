@@ -1,0 +1,68 @@
+(ns motodispatch.actor-test
+  (:require [clojure.test :refer [deftest is]]
+            [motodispatch.actor :as actor]
+            [motodispatch.store :as store]))
+
+(defn- fresh-store []
+  (let [st (store/mem-store)]
+    (store/register-client! st {:client-id "client-1" :name "Kobo Courier Dispatch"})
+    (store/register-rider! st {:rider-id "R-1" :client-id "client-1"
+                               :name "rider-042" :license-verified? true})
+    (store/register-motorcycle! st {:motorcycle-id "M-1" :client-id "client-1"
+                                    :name "moto-042" :max-maintenance-cost 500})
+    st))
+
+(deftest commits-a-valid-log-delivery-record
+  (let [st (fresh-store)
+        graph (actor/build-graph {:store st})
+        request {:client-id "client-1" :op :log-delivery-record :stake :low
+                 :rider-id "R-1" :detail "delivered package #4471"}
+        result (actor/run-request! graph request {} "thread-1")]
+    (is (= :done (:status result)))
+    (is (some? (get-in result [:state :record])))
+    (is (= 1 (count (store/records-of st "client-1"))))))
+
+(deftest commits-a-valid-schedule-dispatch-operation
+  (let [st (fresh-store)
+        graph (actor/build-graph {:store st})
+        request {:client-id "client-1" :op :schedule-dispatch-operation :stake :low
+                 :rider-id "R-1" :detail "assign rider to zone-3 roster shift"}
+        result (actor/run-request! graph request {} "thread-2")]
+    (is (= :done (:status result)))
+    (is (some? (get-in result [:state :record])))
+    (is (= 1 (count (store/records-of st "client-1"))))))
+
+(deftest holds-a-proposal-for-an-unverified-rider
+  (let [st (fresh-store)]
+    (store/register-rider! st {:rider-id "R-2" :client-id "client-1"
+                               :name "rider-unverified" :license-verified? false})
+    (let [graph (actor/build-graph {:store st})
+          request {:client-id "client-1" :op :log-delivery-record :stake :low
+                   :rider-id "R-2" :detail "delivered package #4472"}
+          result (actor/run-request! graph request {} "thread-3")]
+      (is (= :hold (:disposition (:state result))))
+      (is (empty? (store/records-of st "client-1"))))))
+
+(deftest interrupts-then-approves-flag-safety-concern-on-human-approval
+  (let [st (fresh-store)
+        graph (actor/build-graph {:store st})
+        request {:client-id "client-1" :op :flag-safety-concern :stake :low
+                 :rider-id "R-1" :concern-type :vehicle-defect :detail "brake pads worn"}
+        interrupted (actor/run-request! graph request {} "thread-4")]
+    (is (= :interrupted (:status interrupted)))
+    (is (empty? (store/records-of st "client-1")))
+    (let [resumed (actor/approve! graph "thread-4")]
+      (is (= :done (:status resumed)))
+      (is (= 1 (count (store/records-of st "client-1")))))))
+
+(deftest interrupts-then-approves-maintenance-order-above-cost-threshold
+  (let [st (fresh-store)
+        graph (actor/build-graph {:store st})
+        request {:client-id "client-1" :op :coordinate-maintenance-order :stake :low
+                 :rider-id "R-1" :motorcycle-id "M-1" :cost 900}
+        interrupted (actor/run-request! graph request {} "thread-5")]
+    (is (= :interrupted (:status interrupted)))
+    (is (empty? (store/records-of st "client-1")))
+    (let [resumed (actor/approve! graph "thread-5")]
+      (is (= :done (:status resumed)))
+      (is (= 1 (count (store/records-of st "client-1")))))))
