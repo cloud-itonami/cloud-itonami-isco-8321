@@ -16,7 +16,9 @@
   A proposal: {:op :log-delivery-record|:schedule-dispatch-operation|:flag-safety-concern|:coordinate-maintenance-order
                :effect :propose :rider-id str :motorcycle-id str?
                :cost number? :concern-type kw? :detail str? :stake kw
-               :confidence n :rationale str}")
+               :confidence n :rationale str}"
+  (:require #?(:clj  [clojure.edn :as edn]
+               :cljs [cljs.reader :as edn])))
 
 (defprotocol Advisor
   (-advise [advisor store request] "request -> proposal map"))
@@ -54,7 +56,7 @@
 
 (defn- parse-proposal [content]
   (try
-    (let [p (read-string content)]
+    (let [p (edn/read-string content)]
       (if (map? p)
         (assoc p :effect :propose)
         {:op :unknown :effect :propose :confidence 0.0 :stake :high
