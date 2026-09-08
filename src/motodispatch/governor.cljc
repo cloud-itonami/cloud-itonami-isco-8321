@@ -66,7 +66,7 @@
     8. maintenance-order cost above the motorcycle's registered
                                    `:max-maintenance-cost` ceiling.
     9. low confidence (< `confidence-floor`)."
-  (:require [clojure.string :as str]
+  (:require [kotoba.lang.text :as str]
             [motodispatch.store :as store]))
 
 (def confidence-floor 0.6)
@@ -98,7 +98,7 @@
    "operate the motorcycle directly"])
 
 (defn- scope-excluded? [proposal]
-  (let [text (str/lower-case (str (:rationale proposal) " " (:detail proposal)))]
+  (let [text (str/lower (str (:rationale proposal) " " (:detail proposal)))]
     (boolean (some #(str/includes? text %) scope-excluded-phrases))))
 
 (defn- hard-violations [{:keys [request proposal]} client-record rider-record motorcycle-record]
