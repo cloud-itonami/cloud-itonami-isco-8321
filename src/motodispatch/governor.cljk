@@ -85,7 +85,7 @@
 ;; inside the mock advisor's own default rationale text and
 ;; false-blocks routine proposals. See
 ;; `default-mock-advisor-proposals-never-self-trip` in
-;; test/motodispatch/governor_test.clj.
+;; test/motodispatch/governor_test.cljk.
 (def ^:private scope-excluded-phrases
   ["finalize the route decision"
    "finalize a route decision"
