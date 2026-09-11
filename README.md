@@ -11,7 +11,7 @@ This repository designs a forkable OSS business for an independent motorcycle co
 (`motodispatch.governor`), following the itonami actor pattern
 (ADR-2607011000): `:intake -> :advise -> :govern -> :decide -+-> :commit
 (:ok?) +-> :request-approval (:escalate?, human-in-the-loop interrupt)
-+-> :hold (:hard?)`. 22 tests / 49 assertions green (`clojure -M:test`).
++-> :hold (:hard?)`. 22 tests / 49 assertions green (`kbb -M:test`).
 
 HARD invariants (always hold, never overridable): dispatch/courier
 operator (client) provenance, no-actuation (`:effect` must be
