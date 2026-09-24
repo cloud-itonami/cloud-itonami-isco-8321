@@ -17,7 +17,7 @@
                :effect :propose :rider-id str :motorcycle-id str?
                :cost number? :concern-type kw? :detail str? :stake kw
                :confidence n :rationale str}"
-  (:require #?(:clj  [clojure.edn :as edn]
+  (:require #?(:clj  [kotoba.lang.edn :as edn]
                :cljs [cljs.reader :as edn])))
 
 (defprotocol Advisor
