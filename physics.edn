@@ -1,0 +1,35 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:physics` runs it.
+;;
+;; README "Robotics premise": a dispatch/logistics coordination robot does
+;; rider-roster scheduling, delivery-record logging and maintenance-order
+;; coordination; it never rides the motorcycle and never overrides a rider's
+;; on-road judgment. The physical work it dispatches is the delivery ride: how
+;; long an urban leg takes, and how hard a loaded bike can brake before the
+;; rear wheel unloads (pitch-over), which a top-box load makes worse.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-8321"
+ :cases
+ [{:id :delivery-leg
+   :kind :transport
+   :procedure "loaded delivery motorcycle rides an urban leg at up to 40 km/h with no intermediate stops"
+   :params {:mass-kg 150.0 :payload-kg 15.0 :v-max-mps 11.1 :a-max-mps2 2.0
+            :brake-decel-mps2 3.0 :drive-force-n 1500.0 :crr 0.015
+            :cog-height-m 0.60 :payload-cog-height-m 0.90 :support-half-length-m 0.70 :max-time-s 1200.0}
+   :sweep {:param :distance-m :values [1000.0 2000.0 3000.0 4000.0 5000.0]}
+   :quantity :cycle-time-s
+   :limit {:max 360.0 :basis "estimate: a 6 minute riding budget inside a 30 minute delivery promise"}
+   :boundary {:lo 200.0 :hi 8000.0}}
+  {:id :hard-stop-with-top-box
+   :kind :transport
+   :procedure "loaded motorcycle (20 kg in the top box) brakes hard from 40 km/h; the tip-over margin is the pitch-over margin about the front contact patch"
+   :params {:mass-kg 150.0 :payload-kg 20.0 :distance-m 100.0 :v-max-mps 11.1 :a-max-mps2 2.0
+            :drive-force-n 1500.0 :crr 0.015
+            :cog-height-m 0.60 :payload-cog-height-m 0.90 :support-half-length-m 0.70 :max-time-s 600.0}
+   :sweep {:param :brake-decel-mps2 :values [3.0 4.0 5.0 6.0 7.0 8.0]}
+   :quantity :min-tipover-margin
+   :limit {:min 0.3 :basis "estimate: keep about a third of the static rear-wheel load margin under hard braking"}
+   :boundary {:lo 2.0 :hi 10.0}}]}
