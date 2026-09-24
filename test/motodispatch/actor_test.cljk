@@ -1,5 +1,5 @@
 (ns motodispatch.actor-test
-  (:require [clojure.test :refer [deftest is]]
+  (:require [kotoba.test :refer [deftest is]]
             [motodispatch.actor :as actor]
             [motodispatch.store :as store]))
 

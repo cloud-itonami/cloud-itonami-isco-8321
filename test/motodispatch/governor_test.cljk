@@ -1,5 +1,5 @@
 (ns motodispatch.governor-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [motodispatch.store :as store]
             [motodispatch.governor :as governor]
             [motodispatch.advisor :as advisor]))
